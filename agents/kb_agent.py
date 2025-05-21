@@ -1,12 +1,11 @@
 from typing import List, Optional, Tuple, Dict, Set
 
-from .base_agent import BaseAgent
-from ..game.card import Card, CardType
-from ..game.action import Action, ActionType, ActionResult
-from ..game.game_state import GameState
-from ..knowledge.kb_interface import KnowledgeBase
+from game.card import Card, CardType
+from game.action import Action, ActionType, ActionResult
+from game.game_state import GameState
+from knowledge.kb_interface import KnowledgeBase
 
-class KnowledgeBasedAgent(BaseAgent):
+class KnowledgeBasedAgent:
     """An agent that uses a knowledge base for reasoning."""
 
     def __init__(self, player_id: int, kb_class):
@@ -17,8 +16,9 @@ class KnowledgeBasedAgent(BaseAgent):
             player_id: The ID of the player this agent controls
             kb_class: The knowledge base class to use
         """
-        super().__init__(player_id)
+        self.player_id = player_id
         self.kb = kb_class()
+        self.hand = []
 
     def initialize_kb(self, num_players: int, all_cards: List[Card]):
         """Initialize the knowledge base with game information."""
@@ -27,6 +27,10 @@ class KnowledgeBasedAgent(BaseAgent):
         # Add knowledge about own cards
         for card in self.hand:
             self.kb.add_card_knowledge(self.player_id, card, True)
+            # Also add negative knowledge for other players
+            for player_id in range(num_players):
+                if player_id != self.player_id:
+                    self.kb.add_negative_knowledge(player_id, card)
 
     def make_move(self, game_state: GameState) -> Action:
         """Make a move based on knowledge base reasoning."""
@@ -42,6 +46,35 @@ class KnowledgeBasedAgent(BaseAgent):
 
         # Otherwise, make a suggestion that will gain the most information
         best_suggestion = self.kb.get_best_suggestion()
+        if best_suggestion is None:
+            # If no suggestion is available, make a random suggestion
+            # Only suggest cards we don't have
+            suspects = [card for card in game_state.all_cards 
+                       if card.card_type == CardType.SUSPECT 
+                       and card not in self.hand]
+            weapons = [card for card in game_state.all_cards 
+                      if card.card_type == CardType.WEAPON 
+                      and card not in self.hand]
+            rooms = [card for card in game_state.all_cards 
+                    if card.card_type == CardType.ROOM 
+                    and card not in self.hand]
+            
+            if suspects and weapons and rooms:
+                return Action(
+                    action_type=ActionType.SUGGESTION,
+                    suspect=suspects[0],
+                    weapon=weapons[0],
+                    room=rooms[0]
+                )
+            else:
+                # If we can't make a valid suggestion, make an accusation
+                return Action(
+                    action_type=ActionType.ACCUSATION,
+                    suspect=suspects[0] if suspects else None,
+                    weapon=weapons[0] if weapons else None,
+                    room=rooms[0] if rooms else None
+                )
+        
         return Action(
             action_type=ActionType.SUGGESTION,
             suspect=best_suggestion[0],
@@ -51,6 +84,7 @@ class KnowledgeBasedAgent(BaseAgent):
 
     def respond_to_suggestion(self, suggestion: Action, game_state: GameState) -> Optional[Card]:
         """Respond to a suggestion based on cards in hand."""
+        # Check if we have any of the suggested cards
         matching_cards = [
             card for card in self.hand
             if card == suggestion.suspect or card == suggestion.weapon or card == suggestion.room

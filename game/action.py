@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Optional, Tuple, List
-from .card import Card
+from game.card import Card
 
 class ActionType(Enum):
     """Types of actions a player can take in Clue."""

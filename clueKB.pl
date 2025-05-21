@@ -35,6 +35,10 @@ player(player3).
 :- dynamic current_turn/1.
 :- dynamic eliminated/1.
 :- dynamic winner/1.
+:- dynamic possible_solution_cards/1.
+:- dynamic possible_player_cards/2.
+:- dynamic solution_card/1.
+:- dynamic eliminated_solution_card/1.
 
 
 % Game setup
@@ -134,6 +138,32 @@ make_accusation(Player, Suspect, Weapon, Room) :-
 eliminate_player(Player) :-
     assertz(eliminated(Player)),
     next_turn.
+
+% New predicates for Python interface
+can_solve_case :-
+    solution(Suspect, Weapon, Room),
+    solution_card(Suspect),
+    solution_card(Weapon),
+    solution_card(Room).
+
+best_suggestion(Suspect, Weapon, Room) :-
+    possible_solution_cards(Cards),
+    member(Suspect, Cards),
+    member(Weapon, Cards),
+    member(Room, Cards),
+    card_type(Suspect, suspect),
+    card_type(Weapon, weapon),
+    card_type(Room, room).
+
+best_card_to_show(Cards, Suspect, Weapon, Room) :-
+    member(Card, Cards),
+    \+ solution_card(Card),
+    \+ eliminated_solution_card(Card).
+
+check_for_bluffing(Player, Suspect, Weapon, Room) :-
+    possible_player_cards(Player, Cards),
+    member(Card, Cards),
+    (Card = Suspect; Card = Weapon; Card = Room).
 
 % Simple game initialization
 initialize_game :-

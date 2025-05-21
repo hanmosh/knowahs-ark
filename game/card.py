@@ -9,16 +9,18 @@ class CardType(Enum):
 class Card:
     """Representation of a Clue card."""
 
-    def __init__(self, name, card_type):
+    def __init__(self, name, card_type, owner_id=None):
         """
         Initialize a card.
 
         Args:
             name (str): The name of the card
             card_type (CardType): The type of the card
+            owner_id (int, optional): The ID of the player who owns this card
         """
         self.name = name
         self.card_type = card_type
+        self.owner_id = owner_id
 
     def __eq__(self, other):
         if not isinstance(other, Card):
@@ -32,7 +34,7 @@ class Card:
         return f"{self.name}"
 
     def __repr__(self):
-        return f"Card({self.name}, {self.card_type.name})"
+        return f"Card({self.name}, {self.card_type.name}, owner_id={self.owner_id})"
 
 # Standard Clue cards
 SUSPECTS = [

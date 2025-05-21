@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Dict, Set, Optional
-from ..game.card import Card
-from ..game.action import Action
-from ..game.game_state import GameState
+from game.card import Card
+from game.action import Action
+from game.game_state import GameState
 
 class KnowledgeBase(ABC):
     """Abstract base class for knowledge base implementations."""

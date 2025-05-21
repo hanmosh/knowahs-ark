@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple
-from .card import Card, CardType
+from game.card import Card, CardType
 
 @dataclass
 class GameState:
